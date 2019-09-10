@@ -7,6 +7,7 @@ time_series <- sim_process(1000)
 #Plotting sample ACF (Q1.a)
 acf(time_series, lag.max = 20)
 
+#Creating matrix for storing ACF bootstrap
 bootstrap <- matrix(NA, nrow = 1000, ncol = 21)
 
 for (i in 1:1000) {
