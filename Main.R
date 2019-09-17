@@ -1,8 +1,12 @@
 source('functions.r')
 library(ggplot2)
+library(stats)
 
 #Simulate for timeseries as defined in question 1
 time_series <- sim_process(1000)
+
+################################################ 1.a ################################################
+
 
 #Plotting sample ACF (Q1.a)
 acf(time_series, lag.max = 20)
@@ -10,16 +14,18 @@ acf(time_series, lag.max = 20)
 #Creating matrix for storing ACF bootstrap
 bootstrap <- matrix(NA, nrow = 1000, ncol = 21)
 
+#Calculating ACF on resampled timeseries
 for (i in 1:1000) {
   bootstrap[i,] <- acf(sample(time_series), plot = FALSE)$acf[1:21, 1, 1]
 }
 
+#Calculating quntiles on ACFs
 ci <- matrix(NA, nrow = 21, ncol = 2)
-
 for (i in 1:21) {
   ci[i, ] <- quantile(bootstrap[,i], probs = c(0.025, 0.975))
 }
 
+#Plotting the result
 ci <- cbind(1:21, ci, acf(time_series, lag.max = 20, plot = FALSE)$acf[1:21, 1, 1])
 ci <- data.frame(ci)
 colnames(ci) <- c('x', 'lower', 'upper', 'acf')
@@ -34,3 +40,16 @@ ggplot(ci[2:21,]) + geom_ribbon(aes(x = x, ymin = lower,  ymax = upper), alpha =
   geom_segment(aes(x = x, y = acf, xend = x, yend = 0)) +
   xlab('Lag') + ylab('Correlation') + coord_cartesian(ylim = c(-0.05, 1))
 
+################################################ 1.b ################################################
+
+#Calcuating Yule_Walker estimates
+yule_walker_estimates <- ar.yw(time_series)
+
+#The order chosen for AR process
+yule_walker_estimates$order
+
+#The coefficients (phi)
+yule_walker_estimates$ar
+
+#The variance sigma^2
+yule_walker_estimates$var.pred
