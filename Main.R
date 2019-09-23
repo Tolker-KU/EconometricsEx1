@@ -43,13 +43,42 @@ ggplot(ci[2:21,]) + geom_ribbon(aes(x = x, ymin = lower,  ymax = upper), alpha =
 ################################################ 1.b ################################################
 
 #Calcuating Yule_Walker estimates
-yule_walker_estimates <- ar.yw(time_series)
+yule_walker_estimates <- ar.yw(time_series, order.max = 1)
 
 #The order chosen for AR process
 yule_walker_estimates$order
 
 #The coefficients (phi)
-yule_walker_estimates$ar
+phi <- yule_walker_estimates$ar
 
 #The variance sigma^2
 yule_walker_estimates$var.pred
+
+#Maybe confidence bands for (phi). Need to check normalisation. See notes p. 47 bottom
+qnorm(matrix(c(0.025, 0.975), ncol = 2, nrow = yule_walker_estimates$order, byrow = TRUE), mean = yule_walker_estimates$ar, sd = sqrt(diag(yule_walker_estimates$asy.var.coef)))
+
+
+################################################ 1.b ################################################
+
+resids <- time_series - c(0, head(time_series, -1))
+B <- 1000
+new_phi <- rep(NA, B)
+for (b in 1:B) {
+  new_resids = sample(resids, 1000, replace = TRUE)
+
+  new_ts = rep(NA, 1000)
+
+  new_ts[1] <- new_resids[1]
+
+  for (i in 2:1000) {
+    new_ts[i] <- phi * new_ts[i - 1] + new_resids[i]
+  }
+
+  new_phi[b] <- ar.yw(new_ts, order.max = 1)$ar
+}
+
+plot_df_1b <- data.frame(phi = new_phi, x = as.factor('Bootstrap'))
+ggplot(plot_df_1b, aes(x = x, y = phi)) + geom_boxplot(width = 0.15)
+
+quantile(new_phi, c(0.025, 0.975))
+
