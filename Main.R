@@ -58,7 +58,7 @@ yule_walker_estimates$var.pred
 qnorm(matrix(c(0.025, 0.975), ncol = 2, nrow = yule_walker_estimates$order, byrow = TRUE), mean = yule_walker_estimates$ar, sd = sqrt(diag(yule_walker_estimates$asy.var.coef)))
 
 
-################################################ 1.b ################################################
+################################################ 1.c ################################################
 
 resids <- time_series - c(0, head(time_series, -1))
 B <- 1000
@@ -81,4 +81,21 @@ plot_df_1b <- data.frame(phi = new_phi, x = as.factor('Bootstrap'))
 ggplot(plot_df_1b, aes(x = x, y = phi)) + geom_boxplot(width = 0.15)
 
 quantile(new_phi, c(0.025, 0.975))
+
+
+################################################ 2.a ################################################
+
+sp500 <- read.csv('sp500.csv', sep = ' ', header = FALSE)
+sp500$V6 <- NULL
+
+
+sp500_vec <- list()
+for (i in 1:dim(sp500)[1]) {
+  sp500_vec <- append(sp500_vec, sp500[i,])
+}
+sp500_vec <- unlist(sp500_vec, use.names = FALSE)
+
+
+
+
 
