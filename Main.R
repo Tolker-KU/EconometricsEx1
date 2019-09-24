@@ -1,6 +1,8 @@
 source('functions.r')
 library(ggplot2)
 library(stats)
+library(dplyr)
+setwd("~/Dropbox/Dokumenter/UNI/Year 5/Econometrics2/EconometricsEx1")
 
 #Simulate for timeseries as defined in question 1
 time_series <- sim_process(1000)
@@ -94,6 +96,58 @@ for (i in 1:dim(sp500)[1]) {
   sp500_vec <- append(sp500_vec, sp500[i,])
 }
 sp500_vec <- unlist(sp500_vec, use.names = FALSE)
+
+n_years <- floor(length(sp500_vec)/250)
+
+sp500_vec <- sp500_vec[1:(n_years*250)]
+
+sp_500 <- data.frame(data = sp500_vec, year = rep(1:n_years, each = 250))
+
+sp_500_year_mean <- aggregate(sp_500$data, list(sp_500$year), mean)
+sp_500_year_var <- aggregate(sp_500$data, list(sp_500$year), var)
+sp_500_year_mean_abs <- aggregate(abs(sp_500$data), list(sp_500$year), mean)
+sp_500_year_var_abs <- aggregate(abs(sp_500$data), list(sp_500$year), var)
+
+par(mfrow = c(2,1))
+plot(sp_500_year_mean$x, type = 'l')
+plot(sp_500_year_mean_abs$x, type = 'l')
+
+par(mfrow = c(2,1))
+plot(sp_500_year_var$x, type = 'l')
+plot(sp_500_year_var_abs$x, type = 'l')
+
+
+################################################ 3.a ################################################
+
+oil <- read.delim('oil.txt', header = FALSE)
+colnames(oil) <- c('brentM', 'brentM+1', 'Gasoil', 'HeatOil')
+
+brentM_returns <- diff(oil$brentM)/oil$brentM[-nrow(oil)]
+brentM_log_retruns <- log(1 + brentM_returns)
+
+plot(abs(brentM_returns - brentM_log_retruns))
+max(abs(brentM_returns - brentM_log_retruns))
+
+acf(brentM_log_retruns, lag.max = length(brentM_log_retruns)/10)
+acf(abs(brentM_log_retruns), lag.max = length(brentM_log_retruns)/10)
+acf(brentM_log_retruns^2, lag.max = length(brentM_log_retruns)/10)
+
+oil_ar_yw <- ar.yw(brentM_log_retruns, order.max = 100)
+oil_ar_yw$ar
+#plot(ar.mle(brentM_log_retruns, order.max = 30)$aic)
+oil_ar_sim <- arima.sim(list(ar = oil_ar_yw$ar), length(oil$brentM), rand.gen = rt, df = 4)
+#par(mfrow = c(2,1))
+plot(brentM_log_retruns, type = 'l')
+plot(oil_ar_sim, type = 'l')
+
+acf(oil_ar_sim, lag.max = length(oil_ar_sim)/10)
+acf(abs(oil_ar_sim), lag.max = length(oil_ar_sim)/10)
+acf(oil_ar_sim^2, lag.max = length(oil_ar_sim)/10)
+
+
+
+
+
 
 
 
