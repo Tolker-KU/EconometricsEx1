@@ -144,12 +144,38 @@ acf(oil_ar_sim, lag.max = length(oil_ar_sim)/10)
 acf(abs(oil_ar_sim), lag.max = length(oil_ar_sim)/10)
 acf(oil_ar_sim^2, lag.max = length(oil_ar_sim)/10)
 
+################################################ 4.b ################################################
+
+
+time_series_4b <- arima.sim(list(ar = c(0.8)), 200, rand.gen = rnorm, sd = 1)
+
+
+acf(time_series_4b, lag.max = 25)
+
+################################################ 5.a ################################################
+
+
+sunspots_5a <- as.vector(sunspots)
+sunspots_5a_df <- data.frame(year = rep(1749:1983, each = 12), data = sunspots_5a)
+sunspots_5a_yearly <- aggregate(sunspots_5a_df$data, list(sunspots_5a_df$year), sum)
+
+model_5a <- ar.yw(sunspots_5a_yearly$x, order.max = 20)
+plot(model_5a$aic)
+model_5a$order
+hist(model_5a$resid)
+mean(model_5a$resid, na.rm = TRUE)
+var(model_5a$resid, na.rm = TRUE) 
+
+
+(2 * var(model_5a$resid, na.rm = TRUE)) / (var(model_5a$resid, na.rm = TRUE)  - 1)
+
+
+sunspots_5a_sim <- arima.sim(list(ar = model_5a$ar), nrow(sunspots_5a_yearly), innov = (sample(model_5a$resid[10:235], nrow(sunspots_5a_yearly), replace = TRUE)))
+
+plot(sunspots_5a_yearly$x, type = 'l')
+plot(sunspots_5a_sim)
 
 
 
-
-
-
-
-
-
+acf(sunspots_5a_yearly$x)
+acf(sunspots_5a_sim)
