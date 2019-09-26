@@ -2,6 +2,7 @@ source('functions.r')
 library(ggplot2)
 library(stats)
 library(dplyr)
+library(reshape2)
 setwd("~/Dropbox/Dokumenter/UNI/Year 5/Econometrics2/EconometricsEx1")
 
 #Simulate for timeseries as defined in question 1
@@ -11,8 +12,8 @@ time_series <- sim_process(1000)
 
 
 #Plotting sample ACF (Q1.a)
-acf(time_series, lag.max = 20)
-
+test <- acf(time_series, lag.max = 20)
+qnorm((1 + 0.95)/2)/sqrt(1000)
 #Creating matrix for storing ACF bootstrap
 bootstrap <- matrix(NA, nrow = 1000, ncol = 21)
 
@@ -33,14 +34,16 @@ ci <- data.frame(ci)
 colnames(ci) <- c('x', 'lower', 'upper', 'acf')
 
 
-ggplot(ci[1:21,]) + geom_line(aes(x = x, y = upper), linetype = 'dotted') +
-  geom_line(aes(x = x, y = lower), linetype = 'dotted') + geom_segment(aes(x = x, y = acf, xend = x, yend = 0)) +
-  xlab('Lag') + ylab('Correlation')
+#ggplot(ci[1:21,]) + geom_line(aes(x = x, y = upper), linetype = 'dotted') +
+#  geom_line(aes(x = x, y = lower), linetype = 'dotted') + geom_segment(aes(x = x, y = acf, xend = x, yend = 0)) +
+#  xlab('Lag') + ylab('Correlation') +
 
 
 ggplot(ci[2:21,]) + geom_ribbon(aes(x = x, ymin = lower,  ymax = upper), alpha = 0.5) +
   geom_segment(aes(x = x, y = acf, xend = x, yend = 0)) +
-  xlab('Lag') + ylab('Correlation') + coord_cartesian(ylim = c(-0.05, 1))
+  xlab('Lag') + ylab('Correlation') + coord_cartesian(ylim = c(-0.05, 1)) +
+  geom_hline(yintercept = qnorm((1 + 0.95)/2)/sqrt(1000), linetype = 'dashed', color = 'blue') +
+  geom_hline(yintercept = -qnorm((1 + 0.95)/2)/sqrt(1000), linetype = 'dashed', color = 'blue')
 
 ################################################ 1.b ################################################
 
@@ -80,7 +83,7 @@ for (b in 1:B) {
 }
 
 plot_df_1b <- data.frame(phi = new_phi, x = as.factor('Bootstrap'))
-ggplot(plot_df_1b, aes(x = x, y = phi)) + geom_boxplot(width = 0.15)
+ggplot(plot_df_1b, aes(x = x, y = phi)) + geom_boxplot(width = 0.8) + xlab('')
 
 quantile(new_phi, c(0.025, 0.975))
 
@@ -107,6 +110,12 @@ sp_500_year_mean <- aggregate(sp_500$data, list(sp_500$year), mean)
 sp_500_year_var <- aggregate(sp_500$data, list(sp_500$year), var)
 sp_500_year_mean_abs <- aggregate(abs(sp_500$data), list(sp_500$year), mean)
 sp_500_year_var_abs <- aggregate(abs(sp_500$data), list(sp_500$year), var)
+
+plot_df_2 <- melt(data.frame(time = 1:77, mean = sp_500_year_mean$x, var = sp_500_year_var$x, mean_abs = sp_500_year_mean_abs$x, var_abs = sp_500_year_var_abs$x), id.vars = 'time')
+
+
+ggplot(plot_df_2, aes(x = time, y = value, group = variable)) + geom_line() + facet_wrap(~variable, scales = 'free')
+
 
 par(mfrow = c(2,1))
 plot(sp_500_year_mean$x, type = 'l')
